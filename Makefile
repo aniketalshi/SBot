@@ -1,7 +1,7 @@
-CC=g++ -w
+CC=g++
 CFLAGS=-c -Wall
 LDFLAGS=
-SOURCES=main.cpp board/board_util.h board/board_util.cpp 
+SOURCES=*.cpp board/*.h board/*.cpp 
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=main
 

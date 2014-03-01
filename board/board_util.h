@@ -6,7 +6,6 @@
 #include <bitset>
 #include <string>
 
-
 #define bitboard_t uint64_t
 
 enum color_e        { GOLD, SILVER, C_COUNT };
@@ -14,9 +13,13 @@ enum rank_e         { RABBIT, CAT, DOG, HORSE, CAMEL, ELEPHANT, R_COUNT };
 enum direction_e    { NORTH, SOUTH, WEST, EAST, DIR_COUNT };
 
 
-static const bitboard_t COLUMN_H = 1ULL | (1ULL << 8) | (1ULL << 16) | (1ULL << 24) |(1ULL << 32) | (1ULL << 40) | (1ULL << 48) | (1ULL << 56) ;
-static const bitboard_t COLUMN_A = (1ULL << 7) | (1ULL << 15) | (1ULL << 23) | (1ULL << 31) | (1ULL << 39) | (1ULL << 47) | (1ULL << 55) | (1ULL << 63) ;
-static bitboard_t EMPTY          = 0xFFFFFFFF0000;
+extern const bitboard_t COLUMN_H;
+extern const bitboard_t COLUMN_A;
+extern bitboard_t EMPTY;
+extern bitboard_t Bitboard[16][2];
+extern const char PieceArray[16][2];
+
+bitboard_t GROUP (bool color);
 
 bitboard_t MOVE_NORTH (bitboard_t b);
 bitboard_t MOVE_EAST  (bitboard_t b);
@@ -27,6 +30,7 @@ bitboard_t NEAR (bitboard_t b);
 bitboard_t GR_NEAR (bitboard_t b);
 bitboard_t SR_NEAR (bitboard_t b);
 
-const std::string display(bitboard_t , int );
+const std::string display(bitboard_t);
+const std::string display_peices(bitboard_t b, int color, int rank);
 
 #endif
