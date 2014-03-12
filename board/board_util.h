@@ -29,11 +29,15 @@ bitboard_t SR_NEAR (bitboard_t b);
 
 bitboard_t GROUP (bool color);
 bitboard_t STRONGER (bool ,int ); 
+bitboard_t WEAKER (bool color, int piece);
 bitboard_t FROZEN (bool color);
 bitboard_t NOT_FROZEN (bool color);
 bitboard_t ONE_STEP_MOVE (bool color);
+bitboard_t TWO_STEP_MOVE (bool color, int piece);
+bitboard_t PULL (bool color, int piece);
 
 const std::string display(bitboard_t);
 const std::string display_peices(bitboard_t b, int color, int rank);
+const std::string print_full_board();
 
 #endif

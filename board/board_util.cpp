@@ -1,15 +1,16 @@
 #include "board_util.h"
+#include <string.h>
 
 using namespace std;
 
-int map_rank_index (int rank) {
+static inline int map_rank_index (int rank) {
 
-    if      (rank == 0) return 0;
-    else if (rank == 1) return 8;
-    else if (rank == 2) return 10;
-    else if (rank == 3) return 12;
-    else if (rank == 4) return 14;
-    else if (rank == 5) return 15;
+    if      (rank == 0) return 0;      // rabbits
+    else if (rank == 1) return 8;      // Cats
+    else if (rank == 2) return 10;     // Dogs         
+    else if (rank == 3) return 12;     // Horses
+    else if (rank == 4) return 14;     // Camels
+    else if (rank == 5) return 15;     // Elephants
 
     return 0;
 }
@@ -19,22 +20,8 @@ const bitboard_t COLUMN_A    = (1ULL << 7) | (1ULL << 15) | (1ULL << 23) | (1ULL
 bitboard_t EMPTY             = 0xFFFFFFFF0000;
 
 /* bitboard representation */
-const char PieceArray[16][2] = { { 'R','r' },
-                                 { 'R','r' },
-                                 { 'R','r' },
-                                 { 'R','r' },
-                                 { 'R','r' },
-                                 { 'R','r' },
-                                 { 'R','r' },
-                                 { 'R','r' },
-                                 { 'C','c' },
-                                 { 'C','c' },
-                                 { 'D','d' },
-                                 { 'D','d' },
-                                 { 'H','h' },
-                                 { 'H','h' },
-                                 { 'M','m' },
-                                 { 'E','e' }};
+const char PieceArray[16][2] = { { 'R','r' }, { 'R','r'}, { 'R','r' }, { 'R','r' }, { 'R','r' }, { 'R','r' }, { 'R','r' }, { 'R','r' },
+                                 { 'C','c' }, { 'C','c'}, { 'D','d' }, { 'D','d' }, { 'H','h' }, { 'H','h' }, { 'M','m' }, { 'E','e' }};
 
 /*
  * Bitboard [0][0] - [15][0] - Gold Pieces bitboards
@@ -49,14 +36,14 @@ bitboard_t MOVE_NORTH (bitboard_t b)       {return ((b) << 8);             }
 bitboard_t MOVE_EAST  (bitboard_t b)       {return ((b & ~COLUMN_H) << 1); }
 bitboard_t MOVE_WEST  (bitboard_t b)       {return ((b & ~COLUMN_A) >> 1); }
 bitboard_t MOVE_SOUTH (bitboard_t b)       {return ((b) >> 8);             }
-bitboard_t NEAR  (bitboard_t b)            {return ((MOVE_NORTH(b)) | (MOVE_EAST(b)) | (MOVE_WEST(b)) | (MOVE_SOUTH(b)));}
+bitboard_t NEAR       (bitboard_t b)       {return ((MOVE_NORTH(b)) | (MOVE_EAST(b)) | (MOVE_WEST(b)) | (MOVE_SOUTH(b)));}
 
 /*GOLD RABBITS north move is illegal*/ 
 bitboard_t GR_NEAR  (bitboard_t b)         {return ((MOVE_EAST(b)) | (MOVE_WEST(b)) | (MOVE_SOUTH(b)));}
 /*SILVER RABBITS south move is illegal*/ 
 bitboard_t SR_NEAR  (bitboard_t b)         {return ((MOVE_NORTH(b)) | (MOVE_EAST(b)) | (MOVE_WEST(b)));}
 
-/* Returns positions of all peices of same color */
+/* Returns positions of all pieces of same color */
 bitboard_t GROUP (bool color) {
     bitboard_t b = 0x0;
     int i = 0;
@@ -66,6 +53,15 @@ bitboard_t GROUP (bool color) {
     return b;
 }
 
+/* Returns positions of all pieces of given color from start index to end index*/
+bitboard_t INDX_GROUP (int color, int start, int end) {
+    bitboard_t retb = 0x0;
+    int i = 0;
+    for (i = start; i <= end; ++i) 
+        retb = retb | Bitboard[i][color];
+
+    return retb;
+}
 
 /* Returns positions of peices of same color stronger than piece */
 bitboard_t STRONGER (bool color, int piece) {
@@ -84,7 +80,7 @@ bitboard_t STRONGER (bool color, int piece) {
 
 /* Returns positions of pieces which are frozen of a given color*/
 bitboard_t FROZEN (bool color) {
-    int i, indx, j;
+    int i;
     bitboard_t retb = 0x0, b = GROUP(color);
 
     /* iterate over all pieces of given color 
@@ -108,14 +104,56 @@ bitboard_t ONE_STEP_MOVE (bool color) {
     return (NEAR(NOT_FROZEN(color)) & EMPTY);
 }
 
+/* Returns all weaker pieces of given color and weaker than given piece */
+bitboard_t WEAKER (bool color, int piece) {
+    bitboard_t retb = 0x0;
+    int indx;
+   
+   /* rank is greater than rabbit*/
+    if (piece > 0) {
+        indx = map_rank_index (piece) - 1;  
+        for (; indx >= 0; indx--) 
+             retb = retb | Bitboard[indx][color];
+    }
+    
+    return retb;
+}
 
+/* Two step move for a given piece */
+bitboard_t TWO_STEP_MOVE (bool color, int piece) {
+    int indx = map_rank_index (piece);
+    
+    if (piece == 0){
+        if (color == GOLD) 
+            return (GR_NEAR(INDX_GROUP(GOLD, 0, 7)));
+        else  
+            return (SR_NEAR(INDX_GROUP(SILVER, 0, 7)));
 
+    } else if (piece < R_COUNT-2) {
+        return (NEAR(Bitboard[indx][color] | Bitboard[indx+1][color]) & WEAKER(!color, piece));
+    } else {
+        return (NEAR(Bitboard[indx][color]) & WEAKER(!color, piece));
+    }
 
+}
 
-
+/* pulling movement for a piece */
+bitboard_t PULL (bool color, int piece) {
+    return (NOT_FROZEN(color) & NEAR(TWO_STEP_MOVE(color, piece)));
+}
 
 
 /************************* Utility Functions *************************/
+int pos_set_bit (bitboard_t b) {
+    int retCount = 0;
+    while (b){
+        if (b & 1) break;
+        b = b >> 1;
+        ++retCount;
+    }
+    return retCount;
+}
+
 static std::string hex_to_binary(int s) {
     unsigned n;
     stringstream ss;
@@ -141,6 +179,57 @@ const std::string display(bitboard_t b) {
     return ss.str();
 }
 
+const std::string print_full_board() {
+    
+    std::ostringstream ss;
+    bool color[64];
+    int  rank[64], indx, nindx, clr, rnk, iter, j, pos;
+    char spc = 32;
+    
+    memset(color, false, 64);
+    for(int i = 0; i < 64; i++)
+        rank[i] = 100;
+
+
+    //iterate over all boards and populate two arrays
+    for (clr = 0; clr < C_COUNT; ++clr) {
+        for(rnk = 0; rnk < R_COUNT; ++rnk) {
+           
+           indx  = map_rank_index(rnk);
+           nindx = (rnk + 1 < R_COUNT)? map_rank_index(rnk+1) : 16;
+            
+           //iterate from indx to nindx
+           for (iter = indx; iter < nindx; ++iter) {
+                pos        = pos_set_bit(Bitboard[iter][clr]);
+                //cout << "\t\t"<< "(row:" << iter << "col: "<<clr<<" "<< pos << ")";
+                color[pos] = (bool)clr;
+                rank[pos]  = rnk;
+           }
+        }
+    }
+    
+    //print the board
+    ss << '\t'<< "   A B C D E F G H" << spc << '\n';
+    ss << '\t' << " +--------+--------+" << '\n';
+
+    for (iter = 8; iter > 0; iter--) {
+       
+       ss << '\t' << (iter) <<'|';
+       for (j = 1; j <= 8; j++){
+            
+            if (rank[8*iter-j] <= 5 && rank[8*iter-j] >=0 )
+                ss << spc << PieceArray[map_rank_index(rank[8*iter-j])][color[8*iter-j]];
+            else
+                ss << spc << '.';
+       }
+       ss << spc << '|' << (iter) << '\n';
+    }
+    ss << '\t' << " +--------+--------+" << '\n';
+    ss << '\t' << "   A B C D E F G H " << spc << '\n';
+    
+    return ss.str();
+}
+
 
 /* Printing the board of given color and rank */
 const std::string display_peices(bitboard_t b, int color, int rank) {
@@ -156,7 +245,7 @@ const std::string display_peices(bitboard_t b, int color, int rank) {
     ss << '\t' << " +--------+--------+" << '\n';
 
     for (iter = 0; iter < 8; ++iter) {
-        
+       
        ss << '\t' << (8 - iter) <<'|';
        str = hex_to_binary(temp << (8 * iter) >> 56);
        
@@ -172,3 +261,5 @@ const std::string display_peices(bitboard_t b, int color, int rank) {
     ss << '\t' << "   A B C D E F G H " << spc << '\n';
     return ss.str();
 }
+
+
