@@ -145,11 +145,11 @@ bitboard_t PULL (bool color, int piece) {
 
 /************************* Utility Functions *************************/
 int pos_set_bit (bitboard_t b) {
-    int retCount = 0;
+    int retCount = -1;
     while (b){
+        ++retCount;
         if (b & 1) break;
         b = b >> 1;
-        ++retCount;
     }
     return retCount;
 }
@@ -201,9 +201,11 @@ const std::string print_full_board() {
            //iterate from indx to nindx
            for (iter = indx; iter < nindx; ++iter) {
                 pos        = pos_set_bit(Bitboard[iter][clr]);
-                //cout << "\t\t"<< "(row:" << iter << "col: "<<clr<<" "<< pos << ")";
-                color[pos] = (bool)clr;
-                rank[pos]  = rnk;
+                if (pos >= 0) {
+                    cout << "\n"<< "(row:" << iter << "col: "<<clr<<" "<< pos << ")";
+                    color[pos] = (bool)clr;
+                    rank[pos]  = rnk;
+                }
            }
         }
     }

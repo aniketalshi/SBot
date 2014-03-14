@@ -28,7 +28,7 @@ int main()
     //cout << display(GROUP(GOLD) | GROUP(SILVER));
     //cout << display(TWO_STEP_MOVE(GOLD, DOG));
     
-    test2();
+    test4();
     cout << endl << print_full_board();
     
     return 0;
