@@ -28,8 +28,10 @@ int main()
     //cout << display(GROUP(GOLD) | GROUP(SILVER));
     //cout << display(TWO_STEP_MOVE(GOLD, DOG));
     
-    test4();
-    cout << endl << print_full_board();
-    
+    //test4(); 
+    //test5();
+    //test6(); 
+   
+    cout << display(ROW_1 | ROW_8); 
     return 0;
 }

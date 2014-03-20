@@ -17,7 +17,14 @@ static inline int map_rank_index (int rank) {
 
 const bitboard_t COLUMN_H    = 1ULL | (1ULL << 8) | (1ULL << 16) | (1ULL << 24) |(1ULL << 32) | (1ULL << 40) | (1ULL << 48) | (1ULL << 56) ;
 const bitboard_t COLUMN_A    = (1ULL << 7) | (1ULL << 15) | (1ULL << 23) | (1ULL << 31) | (1ULL << 39) | (1ULL << 47) | (1ULL << 55) | (1ULL << 63) ;
+const bitboard_t ROW_8       = 0xFF00000000000000ULL; 
+const bitboard_t ROW_1       = 0x00000000000000FFULL; 
 bitboard_t EMPTY             = 0xFFFFFFFF0000;
+
+
+
+/*Trap squares on the board */
+const bitboard_t TRAPSQRS    = 0x0000240000240000ULL;
 
 /* bitboard representation */
 const char PieceArray[16][2] = { { 'R','r' }, { 'R','r'}, { 'R','r' }, { 'R','r' }, { 'R','r' }, { 'R','r' }, { 'R','r' }, { 'R','r' },
@@ -114,22 +121,19 @@ bitboard_t WEAKER (bool color, int piece) {
         indx = map_rank_index (piece) - 1;  
         for (; indx >= 0; indx--) 
              retb = retb | Bitboard[indx][color];
-    }
-    
+    }   
     return retb;
 }
 
-/* Two step move for a given piece */
-bitboard_t TWO_STEP_MOVE (bool color, int piece) {
-    int indx = map_rank_index (piece);
-    
-    if (piece == 0){
-        if (color == GOLD) 
-            return (GR_NEAR(INDX_GROUP(GOLD, 0, 7)));
-        else  
-            return (SR_NEAR(INDX_GROUP(SILVER, 0, 7)));
 
-    } else if (piece < R_COUNT-2) {
+
+/* returns peices which are frozen because of given piece */
+bitboard_t TWO_STEP_MOVE (bool color, int piece) {
+    /* WEAKER( !color, piece) - pieces of opposite color weaker than given piece */
+    
+    int indx = map_rank_index (piece);
+
+    if (piece < R_COUNT-2) {
         return (NEAR(Bitboard[indx][color] | Bitboard[indx+1][color]) & WEAKER(!color, piece));
     } else {
         return (NEAR(Bitboard[indx][color]) & WEAKER(!color, piece));
@@ -137,11 +141,11 @@ bitboard_t TWO_STEP_MOVE (bool color, int piece) {
 
 }
 
-/* pulling movement for a piece */
-bitboard_t PULL (bool color, int piece) {
-    return (NOT_FROZEN(color) & NEAR(TWO_STEP_MOVE(color, piece)));
-}
+/* returns trapped pieces of given color */
+bitboard_t is_trapped (bool color) {
 
+    return (GROUP(color) & TRAPSQRS & ~(NEAR(GROUP(color))));
+}
 
 /************************* Utility Functions *************************/
 int pos_set_bit (bitboard_t b) {
@@ -202,7 +206,7 @@ const std::string print_full_board() {
            for (iter = indx; iter < nindx; ++iter) {
                 pos        = pos_set_bit(Bitboard[iter][clr]);
                 if (pos >= 0) {
-                    cout << "\n"<< "(row:" << iter << "col: "<<clr<<" "<< pos << ")";
+                    //cout << "\n"<< "(row:" << iter << "col: "<<clr<<" "<< pos << ")";
                     color[pos] = (bool)clr;
                     rank[pos]  = rnk;
                 }

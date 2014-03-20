@@ -17,6 +17,9 @@ extern const bitboard_t COLUMN_A;
 extern bitboard_t EMPTY;
 extern bitboard_t Bitboard[16][2];
 extern const char PieceArray[16][2];
+extern const bitboard_t TRAPSQRS;
+extern const bitboard_t ROW_1;
+extern const bitboard_t ROW_8;
 
 bitboard_t MOVE_NORTH (bitboard_t b);
 bitboard_t MOVE_EAST  (bitboard_t b);
@@ -34,7 +37,8 @@ bitboard_t FROZEN (bool color);
 bitboard_t NOT_FROZEN (bool color);
 bitboard_t ONE_STEP_MOVE (bool color);
 bitboard_t TWO_STEP_MOVE (bool color, int piece);
-bitboard_t PULL (bool color, int piece);
+
+bitboard_t is_trapped (bool color);
 
 const std::string display(bitboard_t);
 const std::string display_peices(bitboard_t b, int color, int rank);
